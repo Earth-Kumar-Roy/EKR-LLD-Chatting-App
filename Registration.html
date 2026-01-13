@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base target="_top">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+  <title>Registration | EKR LLD</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .processing { color: #059669; animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+  </style>
+</head>
+
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-6 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-emerald-100 via-slate-50 to-blue-50">
+
+  <div class="max-w-md w-full text-center space-y-8">
+    
+    <div class="space-y-2">
+      <h1 class="text-2xl font-black text-slate-800 uppercase tracking-tighter drop-shadow-sm">
+        EKR LLD Chatting App
+      </h1>
+      <div class="h-1 w-16 bg-emerald-500 mx-auto rounded-full"></div>
+    </div>
+
+    <div class="bg-white rounded-3xl shadow-2xl shadow-slate-200/60 p-8 md:p-10 space-y-6 border border-white animate-in fade-in zoom-in duration-300">
+      
+      <div class="space-y-2">
+        <h2 class="text-xl font-extrabold text-slate-800 tracking-tight">Create Account</h2>
+        <p class="text-slate-500 text-xs font-medium leading-relaxed">
+          Email Authenticated, Now Create Credentials.
+        </p>
+      </div>
+
+      <div id="emailSection" class="space-y-4">
+        <div class="relative group">
+          <i class="fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors text-sm"></i>
+          <input type="email" id="email" placeholder="Enter Email Address" 
+            class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-sm font-medium text-slate-700 transition-all">
+        </div>
+        <button id="sendOtpBtn" onclick="sendOtp()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-2xl shadow-xl shadow-emerald-600/20 transition-all active:scale-95 uppercase tracking-widest text-[11px]">
+          Generate OTP
+        </button>
+      </div>
+
+      <div id="otpSection" class="hidden space-y-4">
+        <div class="relative group">
+          <i class="fas fa-key absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors text-sm"></i>
+          <input type="text" id="otp" placeholder="Enter Verification Code" 
+            class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-sm font-bold text-slate-700 tracking-widest">
+        </div>
+        <button id="verifyBtn" onclick="verifyOtp()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-2xl shadow-xl shadow-emerald-600/20 transition-all active:scale-95 uppercase tracking-widest text-[11px]">
+          Verify Account
+        </button>
+        <button id="resendBtn" onclick="resendOtp()" class="hidden w-full py-3 bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold rounded-xl transition-all disabled:opacity-50 disabled:grayscale text-[10px] uppercase tracking-widest border border-amber-100">
+          Resend OTP
+        </button>
+      </div>
+
+      <div id="afterOtp" class="hidden space-y-4 animate-in fade-in slide-in-from-bottom-2">
+        <div class="relative group">
+          <i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors text-sm"></i>
+          <input type="text" id="name" placeholder="Full Name" 
+            class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-sm font-medium text-slate-700 transition-all">
+        </div>
+        <div class="relative group">
+          <i class="fas fa-at absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors text-sm"></i>
+          <input type="text" id="username" placeholder="Create Username" oninput="validateUsername(this)"
+            class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-sm font-bold text-slate-700 transition-all">
+        </div>
+        <div class="relative group">
+          <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors text-sm"></i>
+          <input type="password" id="password" placeholder="Create Password" 
+            class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-sm font-medium text-slate-700 transition-all">
+        </div>
+        <button onclick="createAccount()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-2xl shadow-xl shadow-emerald-600/20 transition-all active:scale-95 uppercase tracking-widest text-[11px]">
+          Finish & Create Account
+        </button>
+      </div>
+
+      <div id="status" class="text-[11px] font-bold min-h-[16px] px-2 leading-relaxed text-slate-500 italic"></div>
+
+      <div class="pt-4 border-t border-slate-100">
+        <button onclick="loadPage('Login')" class="text-xs font-black text-emerald-600 uppercase tracking-widest hover:underline active:scale-95 transition-all">
+          Already Registered? Login
+        </button>
+      </div>
+    </div>
+
+    <footer class="text-center">
+      <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+        © 2026 Code Alchemists | Identity Module
+      </p>
+    </footer>
+
+  </div>
+
+  <script>
+    let resendTimer;
+
+    function loadPage(pageName) {
+      google.script.run.withSuccessHandler(function (html) {
+        document.open(); document.write(html); document.close();
+      }).loadPage(pageName);
+    }
+
+    function validateUsername(field) {
+      let value = field.value.toLowerCase();
+      const allowed = /^[a-z0-9._]*$/;
+      
+      if (!allowed.test(value) || /^\d+$/.test(value)) {
+        field.value = field.getAttribute("data-last") || "";
+        return;
+      }
+
+      field.value = value;
+      field.setAttribute("data-last", value);
+
+      const status = document.getElementById("status");
+      if (value.length > 0 && value.length < 4) {
+        status.innerText = "Username needs 4+ chars (lowercase, no numbers-only).";
+        status.style.color = "#ef4444";
+      } else {
+        status.innerText = "";
+        status.style.color = "#64748b";
+      }
+    }
+
+    function setProcessing(state) {
+      const status = document.getElementById("status");
+      if (state) { status.innerText = "Processing request..."; status.classList.add("processing"); }
+      else status.classList.remove("processing");
+    }
+
+    function sendOtp() {
+      const email = document.getElementById("email").value.trim();
+      if (!email) { document.getElementById("status").innerText = "Please enter an email."; return; }
+      document.getElementById("sendOtpBtn").disabled = true;
+      setProcessing(true);
+
+      google.script.run.withSuccessHandler(res => {
+        setProcessing(false);
+        document.getElementById("status").innerText = res.msg;
+        if (res.success) {
+          document.getElementById("otpSection").classList.remove("hidden");
+          document.getElementById("emailSection").classList.add("hidden");
+          startResendTimer();
+        } else {
+          document.getElementById("sendOtpBtn").disabled = false;
+        }
+      }).sendOtp(email);
+    }
+
+    function resendOtp() {
+      const email = document.getElementById("email").value.trim();
+      if (!email) return;
+      document.getElementById("resendBtn").disabled = true;
+      setProcessing(true);
+
+      google.script.run.withSuccessHandler(res => {
+        setProcessing(false);
+        document.getElementById("status").innerText = res.msg;
+        if (res.success) startResendTimer();
+        else document.getElementById("resendBtn").disabled = false;
+      }).sendOtp(email);
+    }
+
+    function startResendTimer() {
+      let countdown = 90;
+      const resendBtn = document.getElementById("resendBtn");
+      resendBtn.classList.remove("hidden");
+      resendBtn.disabled = true;
+      clearInterval(resendTimer);
+      resendBtn.innerText = `Resend OTP in ${countdown}s`;
+      resendTimer = setInterval(() => {
+        countdown--;
+        resendBtn.innerText = `Resend OTP in ${countdown}s`;
+        if (countdown <= 0) {
+          clearInterval(resendTimer);
+          resendBtn.innerText = "Resend OTP Now";
+          resendBtn.disabled = false;
+        }
+      }, 1000);
+    }
+
+    function verifyOtp() {
+      const email = document.getElementById("email").value.trim();
+      const otp = document.getElementById("otp").value.trim();
+      if (!otp) { document.getElementById("status").innerText = "Enter valid OTP."; return; }
+      setProcessing(true);
+
+      google.script.run.withSuccessHandler(res => {
+        setProcessing(false);
+        document.getElementById("status").innerText = res.msg;
+        if (res.success) {
+          document.getElementById("otpSection").classList.add("hidden");
+          document.getElementById("afterOtp").classList.remove("hidden");
+          document.getElementById("email").disabled = true;
+        }
+      }).verifyOtp(email, otp);
+    }
+
+    function createAccount() {
+      const name = document.getElementById("name").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      if (!name || !email || !username || !password) {
+        document.getElementById("status").innerText = "All fields are mandatory."; return;
+      }
+
+      const passwordPattern = /^(?=.*[A-Za-z])(?=.*\d).{6,}$/;
+      if (!passwordPattern.test(password)) {
+        document.getElementById("status").innerText = "Password must be 6+ chars and alphanumeric.";
+        return;
+      }
+
+      setProcessing(true);
+      google.script.run.withSuccessHandler(res => {
+        setProcessing(false);
+        document.getElementById("status").innerText = res.msg;
+        if (res.success) {
+          setTimeout(() => loadPage('Login'), 2000);
+        }
+      }).createAccount(name, email, username, password);
+    }
+  </script>
+</body>
+</html>
