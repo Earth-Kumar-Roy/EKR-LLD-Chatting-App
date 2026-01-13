@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base target="_top">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+  <title>Reset Password | EKR LLD</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .processing { color: #059669; animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+  </style>
+</head>
+
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-6 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-emerald-100 via-slate-50 to-blue-50">
+
+  <div class="max-w-md w-full text-center space-y-8">
+    
+    <div class="space-y-2">
+      <h1 class="text-2xl font-black text-slate-800 uppercase tracking-tighter drop-shadow-sm">
+        EKR LLD Chatting App
+      </h1>
+      <div class="h-1 w-16 bg-emerald-500 mx-auto rounded-full"></div>
+    </div>
+
+    <div class="bg-white rounded-3xl shadow-2xl shadow-slate-200/60 p-8 md:p-10 space-y-6 border border-white animate-in fade-in zoom-in duration-300">
+      
+      <div class="space-y-2">
+        <h2 class="text-xl font-extrabold text-slate-800 tracking-tight">Forgot Password</h2>
+        <p class="text-slate-500 text-xs font-medium leading-relaxed">
+          Please verify your identity to set a new access key.
+        </p>
+      </div>
+
+      <div id="emailSection" class="space-y-4">
+        <div class="relative group">
+          <i class="fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors"></i>
+          <input type="email" id="userEmail" placeholder="Registered Email" 
+            class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-sm font-medium text-slate-700 transition-all">
+        </div>
+        <button id="sendOtpBtn" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-2xl shadow-xl shadow-emerald-600/20 transition-all active:scale-95 uppercase tracking-widest text-[11px]">
+          Send Reset OTP
+        </button>
+      </div>
+
+      <div id="otpSection" class="hidden space-y-4">
+        <div class="relative group">
+          <i class="fas fa-key absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors"></i>
+          <input type="text" id="otp" placeholder="Enter 6-digit OTP" 
+            class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-sm font-medium text-slate-700 tracking-[0.5em]">
+        </div>
+        <button id="verifyBtn" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-2xl shadow-xl shadow-emerald-600/20 transition-all active:scale-95 uppercase tracking-widest text-[11px]">
+          Verify OTP
+        </button>
+        <button id="resendBtn" class="w-full py-3 bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold rounded-xl transition-all disabled:opacity-50 disabled:grayscale text-[10px] uppercase tracking-widest border border-amber-100">
+          Resend OTP
+        </button>
+      </div>
+
+      <div id="newPassSection" class="hidden space-y-4">
+        <div class="relative group">
+          <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors"></i>
+          <input type="password" id="newPass" placeholder="Enter New Password" 
+            class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-sm font-medium text-slate-700 transition-all">
+        </div>
+        <button id="changePassBtn" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-2xl shadow-xl shadow-emerald-600/20 transition-all active:scale-95 uppercase tracking-widest text-[11px]">
+          Confirm New Password
+        </button>
+      </div>
+
+      <div id="status" class="text-[11px] font-bold min-h-[16px] px-2 leading-relaxed"></div>
+
+      <div class="pt-2 border-t border-slate-100">
+        <button id="loginNow" class="text-xs font-black text-emerald-600 uppercase tracking-widest hover:underline active:scale-95 transition-all">
+          Back to Login
+        </button>
+      </div>
+    </div>
+
+    <footer class="text-center">
+      <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+        © 2026 Code Alchemists | Recovery Module
+      </p>
+    </footer>
+
+  </div>
+
+  <script>
+    (function () {
+      if (!window._forgotPass) window._forgotPass = {};
+      const ns = window._forgotPass;
+
+      if (ns.resendTimer) { clearInterval(ns.resendTimer); ns.resendTimer = null; }
+
+      function byId(id) { return document.getElementById(id); }
+
+      function loadPage(pageName) {
+        google.script.run.withSuccessHandler(function (html) {
+          document.open(); document.write(html); document.close();
+        }).loadPage(pageName);
+      }
+      window.loadPage = loadPage;
+
+      function resetUI() {
+        byId('sendOtpBtn').parentElement.classList.remove('hidden');
+        byId('otpSection').classList.add('hidden');
+        byId('newPassSection').classList.add('hidden');
+        byId('resendBtn').classList.add('hidden');
+        byId('status').innerText = '';
+        byId('status').className = 'text-[11px] font-bold min-h-[16px] px-2 leading-relaxed text-slate-500';
+        
+        byId('userEmail').value = '';
+        byId('otp').value = '';
+        byId('newPass').value = '';
+
+        ns.email = '';
+        if (ns.resendTimer) { clearInterval(ns.resendTimer); ns.resendTimer = null; }
+      }
+
+      function setProcessing(state) {
+        const statusEl = byId("status");
+        if (!statusEl) return;
+        if (state) {
+          statusEl.innerText = "Processing secure request...";
+          statusEl.classList.add("processing");
+        } else {
+          statusEl.classList.remove("processing");
+        }
+      }
+
+      function sendOtpHandler() {
+        const email = String(byId('userEmail').value || '').trim();
+        if (!email) { byId('status').innerText = "Registration email is required."; return; }
+
+        ns.email = email;
+        setProcessing(true);
+        byId('sendOtpBtn').disabled = true;
+
+        google.script.run.withSuccessHandler(function (res) {
+          setProcessing(false);
+          byId('status').innerText = res?.msg || '';
+          if (res && res.success) {
+            byId('sendOtpBtn').parentElement.classList.add('hidden');
+            byId('otpSection').classList.remove('hidden');
+            startResendTimer();
+          } else {
+            byId('sendOtpBtn').disabled = false;
+          }
+        }).forgotPassword(email);
+      }
+
+      function resendOtpHandler() {
+        if (!ns.email) return;
+        byId('resendBtn').disabled = true;
+        setProcessing(true);
+        google.script.run.withSuccessHandler(function (res) {
+          setProcessing(false);
+          byId('status').innerText = res?.msg || '';
+          if (res && res.success) startResendTimer();
+          else byId('resendBtn').disabled = false;
+        }).forgotPassword(ns.email);
+      }
+
+      function startResendTimer() {
+        const resendBtn = byId('resendBtn');
+        if (!resendBtn) return;
+        if (ns.resendTimer) { clearInterval(ns.resendTimer); ns.resendTimer = null; }
+
+        let countdown = 90;
+        resendBtn.classList.remove('hidden');
+        resendBtn.disabled = true;
+        resendBtn.innerText = `Resend OTP in ${countdown}s`;
+
+        ns.resendTimer = setInterval(() => {
+          countdown--;
+          resendBtn.innerText = `Resend OTP in ${countdown}s`;
+          if (countdown <= 0) {
+            clearInterval(ns.resendTimer);
+            ns.resendTimer = null;
+            resendBtn.innerText = 'Request New OTP';
+            resendBtn.disabled = false;
+          }
+        }, 1000);
+      }
+
+      function verifyOtpHandler() {
+        const otp = String(byId('otp').value || '').trim();
+        if (!otp) { byId('status').innerText = "Please enter the 6-digit code."; return; }
+        setProcessing(true);
+        google.script.run.withSuccessHandler(function (res) {
+          setProcessing(false);
+          byId('status').innerText = res?.msg || '';
+          if (res && res.success) {
+            byId('otpSection').classList.add('hidden');
+            byId('newPassSection').classList.remove('hidden');
+            if (ns.resendTimer) { clearInterval(ns.resendTimer); ns.resendTimer = null; }
+          }
+        }).ForgotPassVerOTP(ns.email, otp);
+      }
+
+      function changePasswordHandler() {
+        const newPass = String(byId('newPass').value || '').trim();
+        const passwordPattern = /^(?=.*[A-Za-z])(?=.*\d).{6,}$/;
+        if (!passwordPattern.test(newPass)) {
+          byId('status').innerText = "Password must be 6+ characters and alphanumeric.";
+          return;
+        }
+        setProcessing(true);
+        google.script.run.withSuccessHandler(function (res) {
+          setProcessing(false);
+          byId('status').innerText = res?.msg || '';
+          if (res && res.success) {
+            byId('newPassSection').classList.add('hidden');
+            byId('userEmail').value = '';
+            byId('status').className = 'text-[11px] font-bold text-emerald-600';
+            byId('status').innerText = "Success! Your password is updated. You may now login.";
+          }
+        }).changePassword(ns.email, newPass);
+      }
+
+      function attachHandlers() {
+        const map = [
+          { id: 'sendOtpBtn', fn: sendOtpHandler },
+          { id: 'resendBtn', fn: resendOtpHandler },
+          { id: 'verifyBtn', fn: verifyOtpHandler },
+          { id: 'changePassBtn', fn: changePasswordHandler },
+          { id: 'loginNow', fn: () => loadPage('Login') }
+        ];
+
+        map.forEach(item => {
+          const el = byId(item.id);
+          if (el) {
+            const freshEl = el.cloneNode(true);
+            el.parentNode.replaceChild(freshEl, el);
+            freshEl.addEventListener('click', item.fn);
+          }
+        });
+      }
+
+      function init() {
+        resetUI();
+        attachHandlers();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        setTimeout(init, 0);
+      }
+
+      ns.init = init;
+    })();
+  </script>
+</body>
+</html>
