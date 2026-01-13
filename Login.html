@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base target="_top">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+  <title>Login | EKR LLD Chatting App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .auth-gradient { background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); }
+    .input-focus { transition: all 0.2s ease-in-out; }
+    .input-focus:focus { transform: translateY(-1px); }
+  </style>
+</head>
+
+<body class="auth-gradient min-h-screen flex items-center justify-center p-4">
+
+  <div class="max-w-md w-full bg-white rounded-3xl shadow-2xl shadow-slate-200/50 p-8 md:p-10 space-y-8 border border-slate-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    
+    <div class="text-center space-y-2">
+      <div class="w-16 h-16 bg-emerald-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-emerald-600/30 rotate-3">
+        <i class="fas fa-comments text-white text-3xl"></i>
+      </div>
+      <h2 class="text-2xl font-extrabold text-slate-800 tracking-tight pt-4">Welcome Back</h2>
+      <p class="text-slate-500 text-sm font-medium italic">Please enter your login credentials.</p>
+    </div>
+
+    <div class="space-y-4">
+      <div class="space-y-1">
+        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Username or Email</label>
+        <div class="relative group">
+          <i class="fas fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors"></i>
+          <input type="text" id="username" placeholder="Username or Email" 
+            class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-sm font-medium text-slate-700 input-focus">
+        </div>
+      </div>
+
+      <div class="space-y-1">
+        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Password</label>
+        <div class="relative group">
+          <i class="fas fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors"></i>
+          <input type="password" id="password" placeholder="Enter Password" 
+            class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-sm font-medium text-slate-700 input-focus">
+        </div>
+      </div>
+
+      <div class="flex items-start gap-3 py-2 px-1">
+        <div class="flex items-center h-5">
+          <input type="checkbox" id="agreeCheckbox" class="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500 cursor-pointer">
+        </div>
+        <label for="agreeCheckbox" class="text-xs text-slate-500 leading-normal cursor-pointer select-none">
+          I agree to abide by all <a href="https://sites.google.com/view/ekr1/ekr-lld-chatting-app/user-agreement" target="_blank" class="text-emerald-600 font-bold hover:underline">Terms & Conditions</a>
+        </label>
+      </div>
+
+      <button id="loginBtn" onclick="verify()" disabled 
+        class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-black rounded-2xl shadow-xl shadow-emerald-600/20 transition-all active:scale-95 uppercase tracking-widest text-sm">
+        Secure Login
+      </button>
+
+      <div id="msg" class="text-center text-xs font-bold text-red-500 min-h-[16px] animate-pulse"></div>
+    </div>
+
+    <div class="flex items-center justify-between px-2 text-xs font-bold uppercase tracking-tighter">
+      <button onclick="loadPage('Registration')" class="text-slate-400 hover:text-emerald-600 transition-colors">Create Account</button>
+      <div class="w-1 h-1 bg-slate-200 rounded-full"></div>
+      <button onclick="loadPage('ForgotPass')" class="text-slate-400 hover:text-emerald-600 transition-colors">Forgot Password</button>
+    </div>
+
+    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-2">
+      <div class="flex items-center gap-2 text-slate-800 font-black text-[10px] uppercase tracking-widest">
+        <i class="fas fa-shield-halved text-emerald-600"></i> System Advisory
+      </div>
+      <p class="text-[11px] text-slate-500 leading-relaxed">
+        Authentication may take 2–5 seconds as our backend verifies your secure session and device identity.
+      </p>
+    </div>
+
+    <footer class="text-center pt-4">
+      <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">© 2026 EKR | EKR LLD Chatting App</p>
+    </footer>
+  </div>
+
+<script>
+(function() {
+  const loginBtn = document.getElementById("loginBtn");
+  const agreeCheckbox = document.getElementById("agreeCheckbox");
+
+  const STORAGE_KEY = 'client_device_uuid_v1';
+  function getDeviceId() {
+    let id = localStorage.getItem(STORAGE_KEY);
+    if (!id) {
+      id = (typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : (() => {
+        const bytes = crypto.getRandomValues(new Uint8Array(16));
+        bytes[6] = (bytes[6] & 0x0f) | 0x40;
+        bytes[8] = (bytes[8] & 0x3f) | 0x80;
+        const hex = [...bytes].map(b => b.toString(16).padStart(2,'0')).join('');
+        return `${hex.substr(0,8)}-${hex.substr(8,4)}-${hex.substr(12,4)}-${hex.substr(16,4)}-${hex.substr(20,12)}`;
+      })();
+      localStorage.setItem(STORAGE_KEY, id);
+    }
+    return id;
+  }
+
+  loginBtn.disabled = !agreeCheckbox.checked;
+  agreeCheckbox.addEventListener('change', function () {
+    loginBtn.disabled = !this.checked;
+  });
+
+  window.loadPage = function(pageName) {
+    google.script.run.withSuccessHandler(html => {
+      document.open();
+      document.write(html);
+      document.close();
+    }).loadPage(pageName);
+  };
+
+  window.verify = function() {
+    const inputUser = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const msg = document.getElementById("msg");
+
+    msg.textContent = "";
+    if (!inputUser || !password) {
+      msg.textContent = "All credentials are required.";
+      return;
+    }
+
+    if (!agreeCheckbox.checked) {
+      msg.textContent = "Terms agreement is mandatory.";
+      return;
+    }
+
+    msg.style.color = "#059669"; // Emerald-600
+    msg.textContent = "Verifying Identity...";
+    loginBtn.disabled = true;
+
+    const deviceId = getDeviceId();
+    const timestamp = new Date().toISOString();
+
+    fetch('https://api.ipify.org?format=text')
+      .then(res => res.text())
+      .then(ip => {
+        google.script.run
+          .withSuccessHandler(res => {
+            if (res.valid === true && res.username) {
+              localStorage.setItem("LOGGEDINUSER", String(res.username));
+              google.script.run.logLogin(res.username, deviceId, ip, timestamp);
+              google.script.run.withSuccessHandler(html => {
+                document.open(); document.write(html); document.close();
+              }).loadPage("Chats");
+            } else {
+              msg.style.color = "#ef4444"; // Red-500
+              msg.textContent = "Access Denied: Invalid Credentials.";
+              loginBtn.disabled = false;
+            }
+          })
+          .withFailureHandler(err => {
+            msg.style.color = "#ef4444";
+            msg.textContent = "System Error: " + err.message;
+            loginBtn.disabled = false;
+          })
+          .loginUser(inputUser, password);
+      })
+      .catch(() => {
+        msg.style.color = "#ef4444";
+        msg.textContent = "Security Check Failed: IP fetch error.";
+        loginBtn.disabled = false;
+      });
+  };
+})();
+</script>
+</body>
+</html>
