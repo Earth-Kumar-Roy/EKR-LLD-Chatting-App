@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base target="_top">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>New Chat | EKR LLD</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+    .custom-scroll::-webkit-scrollbar { width: 4px; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .glass-nav { background: rgba(5, 150, 105, 0.95); backdrop-filter: blur(8px); }
+  </style>
+</head>
+
+<body class="min-h-screen">
+  <div class="max-w-xl mx-auto p-4 space-y-4">
+    
+    <header class="glass-nav rounded-2xl shadow-lg shadow-emerald-600/20 p-3 flex justify-between items-center text-white relative z-50">
+      <div class="flex items-center gap-3">
+        <button class="w-10 h-10 flex items-center justify-center bg-white/20 rounded-xl hover:bg-white/30 transition-all active:scale-90" id="backBtn" title="Back">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <div>
+          <h1 class="font-bold text-[10px] tracking-widest leading-none uppercase opacity-80">Start New</h1>
+          <p class="font-black text-base">Chat Session</p>
+        </div>
+      </div>
+
+      <div id="centerUser" class="text-xs font-bold bg-black/10 px-3 py-2 rounded-xl border border-white/10">
+        @...
+      </div>
+    </header>
+
+    <div class="space-y-3">
+      <div class="flex gap-2">
+        <div class="flex-1 relative group">
+          <i class="fas fa-at absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors"></i>
+          <input id="searchInput" 
+                 type="text" 
+                 placeholder="Search username (3+ chars)" 
+                 class="w-full pl-10 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl shadow-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all font-medium text-slate-700" />
+        </div>
+        <button id="clearBtn" 
+                class="px-4 bg-white border border-slate-200 text-slate-500 font-bold rounded-2xl hover:bg-slate-50 transition-all active:scale-95 shadow-sm">
+          Clear
+        </button>
+      </div>
+
+      <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-100 flex gap-3">
+        <i class="fas fa-info-circle text-emerald-600 mt-1"></i>
+        <p class="text-[11px] text-emerald-800 leading-relaxed font-medium">
+          On pressing <span class="font-bold">START CHAT</span>, the other user will be notified and the connection will be established instantly.
+        </p>
+      </div>
+    </div>
+
+    <div id="status" class="text-center text-[11px] font-black text-emerald-600 uppercase tracking-widest min-h-[20px] animate-pulse"></div>
+
+    <div id="results" class="results space-y-3 custom-scroll overflow-y-auto max-h-[60vh] pb-10" aria-live="polite">
+       </div>
+
+  </div>
+
+<script>
+(function(){
+  const MIN_CHARS = 3;
+  let searchTimer = null;
+  let LOGGED_USER = '';
+  let lastRendered = [];
+
+  function loadPage(pageName){
+    google.script.run.withSuccessHandler(function(html){
+      document.open();
+      document.write(html);
+      document.close();
+    }).loadPage(pageName);
+  }
+  window.loadPage = loadPage;
+
+  function byId(id){ return document.getElementById(id); }
+
+  function escapeHtml(s){
+    return String(s || '').replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    })[c]);
+  }
+
+  function setStatus(text){
+    const st = byId('status');
+    if(st) st.textContent = text || '';
+  }
+
+  function clearResults(){
+    const r = byId('results');
+    if(r) r.innerHTML = '';
+    lastRendered = [];
+  }
+
+  function renderNoUsers(){
+    const r = byId('results');
+    if(r) r.innerHTML = `
+      <div class="py-10 text-center space-y-3 opacity-60">
+        <i class="fas fa-user-slash text-3xl text-slate-300"></i>
+        <p class="text-xs font-bold uppercase tracking-widest text-slate-400">No users found</p>
+      </div>`;
+  }
+
+  /**
+   * UPDATED: renderResults with Modern Card Design
+   */
+  function renderResults(items){
+    const cont = byId('results');
+    if(!cont) return;
+    cont.innerHTML = '';
+    lastRendered = Array.isArray(items) ? items.slice() : [];
+
+    if(!lastRendered.length){
+      renderNoUsers();
+      return;
+    }
+
+    lastRendered.forEach(u => {
+      if(u.username === LOGGED_USER) return;
+
+      const card = document.createElement('div');
+      card.className = 'bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between hover:shadow-md transition-all group';
+
+      // Left: User Profile Info
+      const profileInfo = document.createElement('div');
+      profileInfo.className = "flex items-center gap-3";
+      
+      const avatar = document.createElement('div');
+      avatar.className = "w-11 h-11 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 font-black text-sm uppercase";
+      avatar.textContent = (u.name || u.username || '?').substring(0, 2);
+
+      const textMeta = document.createElement('div');
+      const nm = document.createElement('div');
+      nm.className = 'font-bold text-slate-800 text-sm group-hover:text-emerald-600 transition-colors';
+      nm.innerHTML = escapeHtml(u.name || u.username);
+
+      const us = document.createElement('div');
+      us.className = 'text-xs text-slate-400 font-medium font-mono';
+      us.textContent = '@' + (u.username || '');
+
+      textMeta.appendChild(nm);
+      textMeta.appendChild(us);
+      profileInfo.appendChild(avatar);
+      profileInfo.appendChild(textMeta);
+
+      // Right: Action Button
+      const right = document.createElement('div');
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i> Start Chat';
+      btn.className = 'px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-xl shadow-lg shadow-emerald-600/20 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none uppercase tracking-wider';
+
+      btn.addEventListener('click', function(){
+        startChat(u.username, btn);
+      });
+
+      right.appendChild(btn);
+      card.appendChild(profileInfo);
+      card.appendChild(right);
+      cont.appendChild(card);
+    });
+
+    if(cont.children.length === 0) renderNoUsers();
+  }
+
+  function doSearch(q){
+    setStatus('Scanning Database...');
+    google.script.run
+      .withSuccessHandler(res => {
+        setStatus('');
+        renderResults(Array.isArray(res) ? res : []);
+      })
+      .withFailureHandler(err => {
+        setStatus('Search encountered an error');
+        renderResults([]);
+      })
+      .searchUsers(q);
+  }
+
+  function startChat(targetUser, btn) {
+    if (!targetUser) return;
+    btn.disabled = true;
+    setStatus('Initializing Connection...');
+
+    const loggedUser = localStorage.getItem("LOGGEDINUSER") || '';
+    if (!loggedUser) {
+      setStatus('Session Error: Relogin required');
+      btn.disabled = false;
+      return;
+    }
+
+    google.script.run
+      .withSuccessHandler(function(res) {
+        if (res && res.success && res.chatId) {
+          localStorage.setItem("CHAT_WITH", targetUser);
+          localStorage.setItem("CHAT_ID", res.chatId);
+          loadPage('ChatScreen');
+        } else {
+          setStatus(res?.msg || 'Failed to open channel');
+          btn.disabled = false;
+        }
+      })
+      .withFailureHandler(function(err) {
+        setStatus('Server unreachable');
+        btn.disabled = false;
+      })
+      .startChat(loggedUser, targetUser);
+  }
+
+  function attachSearchInput(){
+    const inp = byId('searchInput');
+    if(!inp) return;
+    inp.addEventListener('input', function(e){
+      const v = String(e.target.value || '').trim();
+      clearTimeout(searchTimer);
+      if(v.length >= MIN_CHARS){
+        searchTimer = setTimeout(()=> doSearch(v), 300);
+      } else {
+        clearResults();
+        setStatus('');
+      }
+    });
+  }
+
+  function init(){
+    LOGGED_USER = localStorage.getItem("LOGGEDINUSER") || '';
+    const center = byId('centerUser');
+    if(center){
+      center.textContent = LOGGED_USER ? '@' + (LOGGED_USER.length > 10 ? LOGGED_USER.slice(0,10) + '...' : LOGGED_USER) : '@...';
+    }
+    attachSearchInput();
+    byId('clearBtn').onclick = () => { byId('searchInput').value = ''; clearResults(); setStatus(''); };
+    byId('backBtn').onclick = () => loadPage('Chats');
+    clearResults();
+    setStatus('');
+  }
+
+  document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', init) : init();
+})();
+</script>
+</body>
+</html>
