@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base target="_top">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EKR LLD Chatting App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+    /* Menu Animation */
+    .menu-enter {
+      animation: slideDown 0.15s ease-out forwards;
+    }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .glass-effect {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+  </style>
+</head>
+
+<body class="min-h-screen">
+  <div class="max-w-xl mx-auto p-2 space-y-2">
+    
+    <header class="bg-emerald-600 rounded-xl shadow-md shadow-emerald-600/10 p-2 flex justify-between items-center text-white relative z-50">
+      <div class="flex items-center gap-2">
+        <div class="bg-white/20 p-1.5 rounded-lg glass-effect">
+          <i class="fas fa-comments text-base"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-[10px] tracking-tight leading-none uppercase opacity-80">Messaging</h1>
+          <p class="font-black text-sm">EKR LLD Chatting App</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <div id="centerUser" class="hidden xs:block text-[10px] font-bold glass-effect px-2 py-1 rounded-lg">
+          @...
+        </div>
+
+        <div class="relative">
+          <button id="menuBtn" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/20 transition-all active:scale-90" title="Menu">
+            <i class="fas fa-ellipsis-v text-base"></i>
+          </button>
+          
+          <div id="menuPanel" class="hidden absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden text-slate-800 menu-enter" role="menu">
+            <a id="menuAIChatbot" class="flex items-center gap-2 px-3 py-2 hover:bg-slate-50 transition cursor-pointer border-b border-slate-50">
+              <i class="fas fa-robot text-emerald-500 text-xs"></i>
+              <span class="font-semibold text-xs">AI Chatbot</span>
+            </a>
+            <a id="menuMyProfile" class="flex items-center gap-2 px-3 py-2 hover:bg-slate-50 transition cursor-pointer border-b border-slate-50">
+              <i class="fas fa-user-circle text-blue-500 text-xs"></i>
+              <span class="font-semibold text-xs">My Profile</span>
+            </a>
+            <a id="menuAppProfile" class="flex items-center gap-2 px-3 py-2 hover:bg-slate-50 transition cursor-pointer border-b border-slate-50">
+              <i class="fas fa-cog text-slate-500 text-xs"></i>
+              <span class="font-semibold text-xs">App Profile</span>
+            </a>
+            <a id="menuLogout" class="flex items-center gap-2 px-3 py-2 hover:bg-red-50 text-red-600 transition cursor-pointer">
+              <i class="fas fa-sign-out-alt text-xs"></i>
+              <span class="font-bold text-xs">Logout</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="flex gap-2 items-center sticky top-2 z-40">
+      <div class="flex-1 relative group">
+        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs transition-colors group-focus-within:text-emerald-500"></i>
+        <input id="chatSearch" 
+               type="text" 
+               placeholder="Search..." 
+               class="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-xs font-medium text-slate-700" />
+      </div>
+      <button onclick="loadPage('NewChat')" 
+              class="w-10 h-10 flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md transition-all active:scale-95 group" 
+              title="New Chat">
+        <i class="fas fa-plus text-sm"></i>
+      </button>
+    </div>
+
+    <div id="status" class="hidden px-3 py-1 bg-slate-200/50 rounded-lg text-[10px] font-bold text-slate-500 uppercase tracking-widest text-center">
+    </div>
+
+    <div id="cardsWrap" class="space-y-2 pb-10">
+    </div>
+
+    <div id="empty" class="hidden py-10 text-center space-y-2">
+      <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-300">
+        <i class="fas fa-comment-slash text-xl"></i>
+      </div>
+      <p class="text-slate-400 font-bold uppercase tracking-widest text-[10px]">No active chats</p>
+    </div>
+
+  </div>
+
+<script>
+  function loadPage(pageName) {
+    google.script.run.withSuccessHandler(function (html) {
+      document.open();
+      document.write(html);
+      document.close();
+    }).loadPage(pageName);
+  }
+
+  window.LOGGED_USER = '';
+  window.ALL_CARDS = [];
+
+  function formatShortUser(u){
+    if(!u) return '@...';
+    return '@' + (u.length > 8 ? u.slice(0,7) + '..' : u);
+  }
+
+  function parseDateToMillis(t){
+    if(!t) return 0;
+    const d = new Date(t);
+    return isNaN(d) ? 0 : d.getTime();
+  }
+
+  function formatToDMY(t) {
+    if (!t) return '';
+    const d = new Date(t);
+    if (isNaN(d)) return t;
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const hh = String(d.getHours()).padStart(2, '0');
+    const min = String(d.getMinutes()).padStart(2, '0');
+    return `${dd}/${mm} ${hh}:${min}`;
+  }
+
+  function renderCards(list){
+    const wrap = document.getElementById('cardsWrap');
+    if(!wrap) return;
+    wrap.innerHTML = '';
+
+    if(!list || list.length === 0){
+      document.getElementById('empty')?.classList.remove('hidden');
+      return;
+    } else {
+      document.getElementById('empty')?.classList.add('hidden');
+    }
+
+    list.forEach(item => {
+      const card = document.createElement('div');
+      // Reduced card padding from p-4 to p-2.5
+      card.className = "bg-white p-2.5 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between hover:border-emerald-100 transition-all cursor-pointer group";
+      card.setAttribute('role','button');
+      card.setAttribute('tabindex','0');
+
+      const leftSection = document.createElement('div');
+      leftSection.className = "flex items-center gap-3";
+
+      // Reduced avatar size from w-12 to w-10
+      const avatar = document.createElement('div');
+      avatar.className = "w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 font-black text-xs uppercase shrink-0";
+      avatar.textContent = (item.name || item.username || '?').substring(0, 2);
+
+      const nameMeta = document.createElement('div');
+      const nm = document.createElement('h3'); 
+      nm.className = "font-bold text-slate-800 text-xs sm:text-sm leading-none mb-1";
+      nm.textContent = item.name || item.username;
+      
+      const us = document.createElement('p'); 
+      us.className = "text-[10px] text-slate-400 font-medium leading-none"; 
+      us.textContent = '@' + (item.username || '');
+      
+      nameMeta.appendChild(nm);
+      nameMeta.appendChild(us);
+      leftSection.appendChild(avatar);
+      leftSection.appendChild(nameMeta);
+
+      const rightSection = document.createElement('div');
+      rightSection.className = "text-right flex flex-col items-end justify-center";
+
+      const ts = document.createElement('p'); 
+      ts.className = "text-[9px] font-bold text-slate-400 uppercase tracking-tighter"; 
+      ts.textContent = formatToDMY(item.timestamp);
+      
+      rightSection.appendChild(ts);
+
+      if(String(item.status||'').toLowerCase() === 'unseen'){
+        const dot = document.createElement('div'); 
+        dot.className = "w-2 h-2 bg-emerald-500 rounded-full border border-white mt-1 shadow-sm";
+        rightSection.appendChild(dot);
+      }
+
+      card.appendChild(leftSection);
+      card.appendChild(rightSection);
+
+      card.addEventListener('click', ()=> startChatAndOpen(item.username) );
+      wrap.appendChild(card);
+    });
+  }
+
+  function fetchChats(){
+    google.script.run.withSuccessHandler(res=>{
+      window.ALL_CARDS = Array.isArray(res) ? res.slice() : [];
+      window.ALL_CARDS.forEach(it=> { it._ts = parseDateToMillis(it.timestamp || ''); });
+      window.ALL_CARDS.sort((a,b)=> (b._ts || 0) - (a._ts || 0));
+      renderCards(window.ALL_CARDS);
+    }).getPChatsForUser(window.LOGGED_USER);
+  }
+
+  window.startChatAndOpen = function(targetUsername){
+    if(!targetUsername) return;
+    const logged = window.LOGGED_USER;
+    if(!logged) return;
+
+    document.body.style.pointerEvents = 'none';
+    const statusEl = document.getElementById('status');
+    if(statusEl){ 
+      statusEl.classList.remove('hidden'); 
+      statusEl.textContent = 'Opening chat...'; 
+    }
+
+    google.script.run.withSuccessHandler(function(chatId){
+      localStorage.setItem("CHAT_WITH", targetUsername);
+      localStorage.setItem("CHAT_ID", chatId || "");
+      google.script.run.withSuccessHandler(function(res){
+        document.body.style.pointerEvents = '';
+        if(res && res.success) window.loadPage('ChatScreen');
+        else alert('Could not open chat');
+      }).startChat(logged, targetUsername, chatId || "");
+    }).getChatId(logged, targetUsername);
+  };
+
+  function attachSearchHandler(){
+    const search = document.getElementById('chatSearch');
+    if(!search) return;
+    search.addEventListener('input', function(e){
+      const q = String(e.target.value || '').trim().toLowerCase();
+      if(!q) { renderCards(window.ALL_CARDS); return; }
+      const filtered = window.ALL_CARDS.filter(it=> (it.name||'').toLowerCase().includes(q) || (it.username||'').toLowerCase().includes(q));
+      renderCards(filtered);
+    });
+  }
+
+  function attachMenuHandlers(){
+    const menuBtn = document.getElementById('menuBtn');
+    const menuPanel = document.getElementById('menuPanel');
+    const mp = [{id:'menuAppProfile', page:'AppProfile'}, {id:'menuMyProfile', page:'MyProfile'}, {id:'menuLogout', page:'Logout'}, {id:'menuAIChatbot', page:'AIChatbot'}];
+
+    if(menuBtn && menuPanel){
+      menuBtn.onclick = function(e){
+        menuPanel.classList.toggle('hidden');
+        e.stopPropagation();
+      };
+    }
+
+    mp.forEach(m=>{
+      const me = document.getElementById(m.id);
+      if(!me) return;
+      me.onclick = function(){
+        menuPanel.classList.add('hidden');
+        if(m.page) window.loadPage(m.page);
+      };
+    });
+    document.addEventListener('click', () => menuPanel.classList.add('hidden'));
+  }
+
+  function init() {
+    window.LOGGED_USER = localStorage.getItem("LOGGEDINUSER") || '';
+    const center = document.getElementById('centerUser');
+    if (center) center.textContent = formatShortUser(window.LOGGED_USER);
+    attachMenuHandlers();
+    attachSearchHandler();
+    fetchChats();
+    setInterval(fetchChats, 30000);
+  }
+
+  init();
+</script>
+</body>
+</html>
