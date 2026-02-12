@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base target="_top">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
+  <title>EKR LLD Chatting App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f0f2f5; /* Light grey background like WhatsApp */
+    }
+
+    /* Chat bubble tails */
+    .bubble-left::before {
+      content: ""; position: absolute; top: 0; left: -8px;
+      width: 10px; height: 10px; background: #ffffff;
+      clip-path: polygon(100% 0, 0 0, 100% 100%);
+    }
+    .bubble-right::before {
+      content: ""; position: absolute; top: 0; right: -8px;
+      width: 10px; height: 10px; background: #10b981;
+      clip-path: polygon(0 0, 0 100%, 100% 0);
+    }
+
+    .chat-container {
+      height: calc(100vh - 140px);
+      scrollbar-width: thin;
+      scrollbar-color: #cbd5e1 transparent;
+    }
+    .chat-container::-webkit-scrollbar { width: 4px; }
+    .chat-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+  </style>
+</head>
+
+<body class="flex flex-col h-screen overflow-hidden">
+
+  <header class="bg-slate-900 text-white shadow-md z-50">
+    <div class="max-w-xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <button id="backBtn" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-active active:scale-90">
+          <i class="fas fa-arrow-left text-lg text-emerald-400"></i>
+        </button>
+        
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center font-bold text-white shadow-sm border border-white/20">
+            <i class="fas fa-user text-sm"></i>
+          </div>
+          <div class="flex flex-col leading-tight">
+            <span id="chatName" class="font-bold text-sm truncate max-w-[120px]">...</span>
+            <div class="flex items-center gap-1.5">
+               <span id="chatStatus" class="text-[10px] uppercase tracking-widest font-black transition-colors">offline</span>
+               <div id="statusDot" class="w-1.5 h-1.5 rounded-full bg-slate-500"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div id="chatUsername" class="text-[10px] font-mono bg-white/10 px-2 py-1 rounded border border-white/5 opacity-60">@...</div>
+    </div>
+  </header>
+
+  <main id="chatContainer" class="chat-container flex-1 overflow-y-auto px-4 py-6 space-y-4 max-w-xl mx-auto w-full">
+    </main>
+
+  <footer class="bg-white border-t border-slate-200 pb-safe shadow-[0_-4px_10px_rgba(0,0,0,0.03)]">
+    <div class="max-w-xl mx-auto p-3 flex items-end gap-2">
+      <div class="flex-1 bg-slate-100 rounded-2xl border border-slate-200 focus-within:border-emerald-400 focus-within:bg-white transition-all px-3 py-2 flex items-end gap-2">
+        <textarea id="messageInput" 
+                  rows="1" 
+                  placeholder="Type a message..." 
+                  class="flex-1 bg-transparent border-0 outline-none text-sm py-1 max-h-32 resize-none text-slate-700"></textarea>
+      </div>
+      <button id="sendBtn" class="w-12 h-12 flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 text-white rounded-full shadow-lg shadow-emerald-600/30 transition-all active:scale-95 disabled:grayscale">
+        <i class="fas fa-paper-plane text-lg ml-0.5"></i>
+      </button>
+    </div>
+  </footer>
+
+<script>
+(function() {
+  let loggedUser = "", chatWith = "", chatId = "";
+
+  if (!window.__chatscreen) window.__chatscreen = {};
+  if (window.__chatscreen.messageInterval) clearInterval(window.__chatscreen.messageInterval);
+  if (window.__chatscreen.onlineInterval) clearInterval(window.__chatscreen.onlineInterval);
+
+  function byId(id){ return document.getElementById(id); }
+
+  function escapeHtml(text){
+    if(!text) return "";
+    return text.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+
+  function loadPage(page){
+    google.script.run.withSuccessHandler(html=>{
+      document.open();
+      document.write(html);
+      document.close();
+    }).loadPage(page);
+  }
+
+  /* ---------------------- MESSAGES ---------------------- */
+
+  function renderMessages(messages){
+    const container = byId("chatContainer");
+    if(!messages || messages.length===0){
+      container.innerHTML=`<div class="text-center py-10 opacity-40"><i class="fas fa-lock text-xs mr-1"></i><span class="text-[10px] font-bold uppercase">Messages are end-to-end encrypted</span></div>`;
+      return;
+    }
+
+    const atBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+    container.innerHTML = "";
+
+    messages.forEach(msg=>{
+      const isMine = msg.sender===loggedUser;
+      const wrap = document.createElement("div");
+      wrap.className = `flex w-full ${isMine ? 'justify-end' : 'justify-start'}`;
+      
+      const safe = escapeHtml(msg.message).replace(/\n/g,"<br>");
+      
+      wrap.innerHTML = `
+        <div class="relative max-w-[85%] px-4 py-2 rounded-2xl text-sm shadow-sm ${isMine ? 'bg-emerald-500 text-white rounded-tr-none bubble-right' : 'bg-white text-slate-800 rounded-tl-none border border-slate-200 bubble-left'}">
+          <p class="leading-relaxed">${safe}</p>
+          <div class="flex items-center justify-end gap-1.5 mt-1 opacity-70">
+            <span class="text-[9px] font-bold uppercase">${msg.timestamp}</span>
+            ${isMine ? `<i class="fas ${msg.status === 'seen' ? 'fa-check-double text-blue-200' : 'fa-check'} text-[8px]"></i>` : ""}
+          </div>
+        </div>
+      `;
+      container.appendChild(wrap);
+    });
+
+    if(atBottom) container.scrollTop = container.scrollHeight;
+
+    const lastMsg = messages[messages.length - 1];
+    if(lastMsg && lastMsg.sender !== loggedUser){
+      setTimeout(() => {
+        google.script.run.markLastMessageSeen(chatId, chatWith, loggedUser);
+      }, 50);
+    }
+  }
+
+  function fetchMessages(){
+    if(!chatId) return;
+    google.script.run.withSuccessHandler(renderMessages).getChatMessages(chatId);
+  }
+
+  function startFetchingMessages(){
+    if(window.__chatscreen.messageInterval) clearInterval(window.__chatscreen.messageInterval);
+    fetchMessages();
+    window.__chatscreen.messageInterval = setInterval(fetchMessages, 2000);
+  }
+
+  /* ---------------------- ONLINE STATUS ---------------------- */
+
+  function fetchOtherOnlineInfo(){
+    if(!chatWith) return;
+    google.script.run.withSuccessHandler(info=>{
+      const lastSeen = info && info.lastSeen ? info.lastSeen : null;
+      const isOnline = lastSeen && (Date.now() - new Date(lastSeen).getTime())/1000 <= 45;
+      
+      const statusLabel = byId("chatStatus");
+      const statusDot = byId("statusDot");
+      
+      statusLabel.textContent = isOnline ? "online" : "offline";
+      statusLabel.style.color = isOnline ? "#10b981" : "#94a3b8";
+      statusDot.className = `w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-slate-500'}`;
+    }).getOnlineInfo(chatWith);
+  }
+
+  function startOnlineStatusUpdate(){
+    if(window.__chatscreen.onlineInterval) clearInterval(window.__chatscreen.onlineInterval);
+    google.script.run.updateUserTimestamp(loggedUser);
+    fetchOtherOnlineInfo();
+    window.__chatscreen.onlineInterval = setInterval(()=>{
+      google.script.run.updateUserTimestamp(loggedUser);
+      fetchOtherOnlineInfo();
+    }, 30000);
+  }
+
+  /* ---------------------- SEND MESSAGE ---------------------- */
+
+  function sendMessage(){
+    const input = byId("messageInput");
+    const msg = input.value.trim();
+    if(!msg) return;
+
+    const sendBtn = byId("sendBtn");
+    sendBtn.disabled = true;
+    sendBtn.classList.add("opacity-50");
+
+    google.script.run.withSuccessHandler(()=>{
+      input.value = "";
+      input.style.height = 'auto';
+      fetchMessages();
+      sendBtn.disabled = false;
+      sendBtn.classList.remove("opacity-50");
+    }).appendMessage(chatId, loggedUser, chatWith, msg, "unseen");
+  }
+
+  /* ---------------------- EVENT HANDLERS ---------------------- */
+
+  function attachHandlers(){
+    byId("backBtn").onclick = () => loadPage("Chats");
+    byId("sendBtn").onclick = sendMessage;
+    
+    // Auto-expand textarea
+    const input = byId("messageInput");
+    input.oninput = function() {
+      this.style.height = 'auto';
+      this.style.height = (this.scrollHeight) + 'px';
+    };
+    
+    // Enter to send
+    input.onkeydown = (e) => {
+      if(e.key === "Enter" && !e.shiftKey && window.innerWidth > 768) {
+        e.preventDefault();
+        sendMessage();
+      }
+    };
+  }
+
+  /* ---------------------- INITIALIZER ---------------------- */
+
+  function initChat() {
+    loggedUser = localStorage.getItem("LOGGEDINUSER") || "";
+    chatWith   = localStorage.getItem("CHAT_WITH")   || "";
+    chatId     = localStorage.getItem("CHAT_ID")     || "";
+
+    if (!loggedUser || !chatWith || !chatId) {
+      loadPage("Chats");
+      return;
+    }
+
+    byId("chatUsername").textContent = "@" + chatWith;
+
+    google.script.run
+      .withSuccessHandler(name => {
+        byId("chatName").textContent = name || chatWith;
+      })
+      .lookupName(chatWith);
+
+    startFetchingMessages();
+    startOnlineStatusUpdate();
+    attachHandlers();
+    
+    // Initial scroll
+    const cont = byId("chatContainer");
+    setTimeout(() => { cont.scrollTop = cont.scrollHeight; }, 500);
+  }
+
+  initChat();
+  window.__chatscreen.init = initChat;
+
+})();
+</script>
+</body>
+</html>
