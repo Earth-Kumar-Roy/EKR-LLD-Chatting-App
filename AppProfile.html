@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<base target="_top">
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>App Profile | EKR LLD</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+	<style>
+		@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+		body {
+			font-family: 'Inter', sans-serif;
+			background-color: #f8fafc;
+		}
+
+		.glass-nav {
+			background: rgba(15, 157, 88, 0.95);
+			backdrop-filter: blur(8px);
+		}
+	</style>
+</head>
+
+<body class="min-h-screen pb-10">
+
+	<header class="glass-nav sticky top-0 z-50 text-white shadow-lg">
+		<div class="max-w-2xl mx-auto px-4 py-3 flex items-center gap-4">
+			<button onclick="loadPage('Chats')" class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/20 hover:bg-white/30 transition-all active:scale-95" title="Go Back">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+			<div>
+				<h1 class="text-xs font-black uppercase tracking-[0.2em] opacity-80 leading-none">System Information
+				</h1>
+				<p class="text-lg font-bold">App Profile</p>
+			</div>
+		</div>
+	</header>
+
+	<main class="max-w-2xl mx-auto px-4 mt-6 space-y-6">
+
+		<div
+			class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col md:flex-row items-center gap-6">
+			<div
+				class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center text-3xl shadow-inner shrink-0">
+				<i class="fas fa-microchip"></i>
+			</div>
+			<div class="text-center md:text-left">
+				<h2 class="text-xl font-extrabold text-slate-800">EKR LLD Chatting App</h2>
+				<p class="text-sm text-slate-500 font-medium leading-relaxed mt-1">
+					A structured text messaging system powered by Google Sheet Management architecture.
+				</p>
+			</div>
+		</div>
+
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+			<div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+				<p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Build Version</p>
+				<p class="text-sm font-bold text-slate-700">December 08, 2025</p>
+			</div>
+			<div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+				<p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Lead Developer</p>
+				<p class="text-sm font-bold text-emerald-600">Earth Kumar Roy</p>
+			</div>
+		</div>
+
+		<div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+			<h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+				<i class="fas fa-align-left"></i> System Overview
+			</h3>
+			<p class="text-xs leading-6 text-slate-600 font-medium">
+				This HTML and JavaScript–based project operates on Google’s infrastructure. Its design focuses on
+				reliability and organized data handling. Due to the nature of server-side sheet processing, data
+				retrieval introduces slight, natural delays to ensure absolute data integrity. Designed for a clean,
+				minimal, and secure text experience.
+			</p>
+			<div class="flex flex-wrap gap-2 pt-2">
+				<span class="px-3 py-1 bg-slate-100 text-slate-600 text-[10px] font-bold rounded-full uppercase italic">HTML/JS</span>
+				<span class="px-3 py-1 bg-slate-100 text-slate-600 text-[10px] font-bold rounded-full uppercase italic">JavaScript (GAS)</span>
+			</div>
+		</div>
+
+		<div class="space-y-3">
+			<h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Digital Resources</h3>
+
+			<div class="space-y-2">
+				<a href="https://sites.google.com/view/ekr1/ekr-lld-chatting-app" target="_blank"
+					class="flex items-center justify-between p-4 bg-white rounded-2xl border border-slate-100 hover:border-emerald-300 transition-all group">
+					<div class="flex items-center gap-3">
+						<i class="fas fa-globe text-emerald-500 w-5"></i>
+						<span class="text-xs font-bold text-slate-700">App Official Website</span>
+					</div>
+					<i class="fas fa-external-link-alt text-[10px] text-slate-300 group-hover:text-emerald-500"></i>
+				</a>
+
+				<a href="https://sites.google.com/view/ekr1/ekr-lld-chatting-app/user-agreement" target="_blank"
+					class="flex items-center justify-between p-4 bg-white rounded-2xl border border-slate-100 hover:border-emerald-300 transition-all group">
+					<div class="flex items-center gap-3">
+						<i class="fas fa-file-contract text-emerald-500 w-5"></i>
+						<span class="text-xs font-bold text-slate-700">User Agreement & Privacy</span>
+					</div>
+					<i class="fas fa-external-link-alt text-[10px] text-slate-300 group-hover:text-emerald-500"></i>
+				</a>
+			</div>
+		</div>
+
+		<div class="bg-slate-900 rounded-3xl p-6 text-white shadow-xl shadow-slate-200">
+			<h3 class="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+				<i class="fas fa-envelope"></i> Contact Developer
+			</h3>
+			<div class="space-y-4">
+				<div>
+					<p class="text-[10px] opacity-60 font-bold uppercase tracking-tighter">Primary Email</p>
+					<a href="mailto:earth.kumar.roy9752@gmail.com"
+						class="text-sm font-bold hover:text-emerald-400 transition-colors">earth.kumar.roy9752@gmail.com</a>
+				</div>
+
+				<div class="grid grid-cols-2 gap-4 pt-2">
+					<a href="https://www.linkedin.com/in/earth-kumar-roy/" target="_blank"
+						class="flex items-center gap-2 text-[11px] font-bold text-slate-300 hover:text-white transition-colors">
+						<i class="fab fa-linkedin text-emerald-400 text-lg"></i> LinkedIn
+					</a>
+					<a href="https://sites.google.com/view/ekr1/leave-a-message" target="_blank"
+						class="flex items-center gap-2 text-[11px] font-bold text-slate-300 hover:text-white transition-colors">
+						<i class="fab fa-twitter text-emerald-400 text-lg"></i> Contact Desk
+					</a>
+				</div>
+			</div>
+		</div>
+
+		<footer class="text-center py-8">
+			<p class="text-[10px] font-black text-slate-400 uppercase tracking-widest italic leading-relaxed">
+				© 2025 Earth Kumar Roy | EKR Digital Initiative
+			</p>
+		</footer>
+
+	</main>
+
+	<script>
+		function loadPage(page) {
+      google.script.run.withSuccessHandler(function(html) {
+        document.open();
+        document.write(html);
+        document.close();
+      }).loadPage(page);
+    }
+	</script>
+
+</body>
+
+</html>
