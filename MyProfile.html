@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base target="_top">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My Profile | Smart Waste App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .glass-nav { background: rgba(16, 185, 129, 0.95); backdrop-filter: blur(8px); }
+  </style>
+</head>
+
+<body class="bg-slate-50 min-h-screen pb-10">
+
+  <header class="glass-nav sticky top-0 z-50 text-white shadow-lg">
+    <div class="max-w-xl mx-auto px-4 py-4 flex items-center gap-4">
+      <button onclick="loadPage('Chats')" class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/20 hover:bg-white/30 transition-all active:scale-90" title="Back">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <h1 class="text-xl font-bold tracking-tight">Account Settings</h1>
+    </div>
+  </header>
+
+  <main class="max-w-xl mx-auto px-4 mt-6 space-y-6">
+    
+    <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 text-center space-y-3">
+      <div class="w-24 h-24 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-3xl font-black shadow-inner">
+        <i class="fas fa-user-circle"></i>
+      </div>
+      <div>
+        <h2 class="text-xl font-black text-slate-800" id="p_name">Loading...</h2>
+        <p class="text-emerald-600 font-bold text-sm tracking-widest uppercase" id="p_username">@...</p>
+      </div>
+    </div>
+
+    <div class="space-y-4">
+      <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Personal Information</h3>
+      
+      <div class="space-y-3">
+        <div class="bg-white p-4 rounded-2xl border border-slate-100 flex items-center gap-4 shadow-sm">
+          <div class="w-10 h-10 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center shrink-0">
+            <i class="fas fa-envelope text-sm"></i>
+          </div>
+          <div class="flex-1">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Registered Email</p>
+            <p class="text-sm font-semibold text-slate-700" id="p_email">...</p>
+          </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-slate-100 flex items-center gap-4 shadow-sm">
+          <div class="w-10 h-10 bg-purple-50 text-purple-500 rounded-xl flex items-center justify-center shrink-0">
+            <i class="fas fa-comments text-sm"></i>
+          </div>
+          <div class="flex-1">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Interaction History</p>
+            <p class="text-sm font-semibold text-slate-700"><span id="p_chats">0</span> Total Connections</p>
+          </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-2xl border border-slate-100 flex items-center gap-4 shadow-sm">
+          <div class="w-10 h-10 bg-orange-50 text-orange-500 rounded-xl flex items-center justify-center shrink-0">
+            <i class="fas fa-shield-alt text-sm"></i>
+          </div>
+          <div class="flex-1">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Account Security</p>
+            <p class="text-sm font-semibold text-slate-700">••••••••</p>
+          </div>
+          <button onclick="loadPage('ForgotPass')" class="text-[10px] font-black text-blue-600 uppercase hover:underline">Change</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="pt-4">
+      <button onclick="loadPage('Logout')" class="w-full py-4 bg-red-50 text-red-600 font-bold rounded-2xl border border-red-100 hover:bg-red-600 hover:text-white transition-all active:scale-95 shadow-sm uppercase tracking-widest text-xs">
+        <i class="fas fa-sign-out-alt mr-2"></i> Terminate Session
+      </button>
+    </div>
+
+    <footer class="text-center py-6 space-y-1">
+      <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">© 2026 Code Alchemists</p>
+      <p class="text-[9px] text-slate-300 font-medium">Smart Waste Report Management App | Kolkata</p>
+    </footer>
+
+  </main>
+
+<script>
+(function () {
+  const LOGGED_USER = localStorage.getItem("LOGGEDINUSER") || '';
+
+  function loadProfile() {
+    if (!LOGGED_USER) return;
+    google.script.run
+      .withSuccessHandler(fillProfile)
+      .getMyProfileData(LOGGED_USER);
+  }
+
+  function fillProfile(data) {
+    document.getElementById("p_username").textContent = "@" + (data.username || "");
+    document.getElementById("p_name").textContent = data.name || "Unknown User";
+    document.getElementById("p_email").textContent = data.email || "N/A";
+    document.getElementById("p_chats").textContent = data.totalChats || 0;
+  }
+
+  window.loadPage = function(pageName) {
+    google.script.run.withSuccessHandler(function(html){
+      document.open();
+      document.write(html);
+      document.close();
+    }).loadPage(pageName);
+  };
+
+  document.readyState === 'loading' 
+    ? document.addEventListener('DOMContentLoaded', loadProfile) 
+    : setTimeout(loadProfile, 0);
+})();
+</script>
+</body>
+</html>
