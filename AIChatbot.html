@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>EKR LLD AI Chatbot</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+	<script src="https://unpkg.com/lucide@latest"></script>
+	<style>
+		body {
+			font-family: 'Inter', sans-serif;
+		}
+
+    .backBtn {
+			background: rgba(255, 255, 255, 0.14);
+			border: none;
+			color: #fff;
+			font-size: 14px;
+			cursor: pointer;
+			padding: 6px 10px;
+			border-radius: 8px;
+			transition: background .15s ease;
+		}
+
+		.backBtn:hover {
+			background: rgba(255, 255, 255, 0.22);
+		}
+
+		.chat-container {
+			height: 65vh;
+			overflow-y: auto;
+			scroll-behavior: smooth;
+		}
+
+		.ai-message {
+			background-color: #f0fdf4;
+			border-left: 4px solid #10b981;
+		}
+	</style>
+</head>
+
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-3">
+
+	<div class="w-full max-w-2xl bg-white rounded-xl shadow-2xl flex flex-col h-[85vh] sm:h-[90vh]">
+
+		<!-- Header -->
+		<header class="p-4 bg-emerald-600 rounded-t-xl shadow-md flex items-center gap-3">
+			<button class="backBtn" id="backBtn" title="Back to chats">&lt;</button>
+      <i data-lucide="bot" class="w-6 h-6 text-white"></i>
+			<h1 class="text-xl sm:text-2xl font-bold text-white">EKR LLD Chatting App AI Asst.</h1>
+		</header>
+
+		<!-- Chat Messages -->
+		<div id="chat-messages" class="chat-container p-3 flex-grow flex flex-col gap-3">
+			<div class="flex justify-start">
+				<div class="ai-message p-3 rounded-lg max-w-xs sm:max-w-md shadow-sm">
+					<p class="font-semibold text-emerald-800">
+						Hello! I am your Gemini-powered AI Assistant. Ask me anything!
+					</p>
+				</div>
+			</div>
+		</div>
+
+		<!-- Input Area -->
+		<div class="p-3 border-t border-gray-200">
+			<div id="loading-indicator" class="text-center text-emerald-600 font-medium mb-2 hidden">
+				<svg class="animate-spin h-5 w-5 mr-2 inline text-emerald-500" viewBox="0 0 24 24">
+					<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+					<path class="opacity-75" fill="currentColor"
+						d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+					</path>
+				</svg>
+				Assistant is typing...
+			</div>
+
+			<form id="chat-form" class="flex gap-2 sm:gap-3 w-full">
+				<input type="text" id="user-input" placeholder="Type your message here..."
+             class="flex-grow p-3 border border-gray-300 rounded-xl focus:ring-emerald-500 focus:border-emerald-500 text-gray-800 shadow-inner transition duration-150 min-w-0">
+				<button type="submit" id="send-button"
+              class="flex-shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-5 rounded-xl transition duration-300 shadow-lg disabled:opacity-50">
+        Send
+      </button>
+			</form>
+		</div>
+
+	</div>
+
+	<script type="module">
+		const base64ApiKey = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"; 
+  const apiKey = atob(base64ApiKey); 
+
+  let chatHistory = [];
+  let isProcessing = false;
+
+  const appendMessage = (text, sender) => {
+    const chatMessages = document.getElementById('chat-messages');
+    const wrapper = document.createElement('div');
+    wrapper.className = `flex ${sender==='user'?'justify-end':'justify-start'}`;
+    const bubble = document.createElement('div');
+    bubble.className = `p-3 rounded-xl max-w-xs sm:max-w-md shadow-md transition-all duration-300 ${
+      sender==='user'?'bg-blue-500 text-white rounded-br-none':'ai-message text-gray-800 rounded-tl-none'}`;
+    bubble.textContent = text;
+    wrapper.appendChild(bubble);
+    chatMessages.appendChild(wrapper);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  };
+
+  const setLoading = (loading) => {
+    isProcessing = loading;
+    document.getElementById('loading-indicator').classList.toggle('hidden', !loading);
+    document.getElementById('send-button').disabled = loading;
+    document.getElementById('user-input').disabled = loading;
+  };
+
+  const sendMessage = async (userText) => {
+    if(isProcessing) return;
+    setLoading(true);
+
+    appendMessage(userText, 'user');
+    chatHistory.push({ role: "user", parts: [{ text: userText }] });
+
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+    const payload = {
+      contents: chatHistory,
+      systemInstruction: {
+	    parts: [{ text: `You are the EKR LLD AI Assistant. Knowledge base: App Name: EKR LLD Chatting App, Website:
+	https://sites.google.com/view/ekr1/, Developer: Earth Kumar Roy, Build Date: December 08, 2025, User Agreement:
+	https://sites.google.com/view/ekr1/ekr-lld-chatting-app/user-agreement, Short Description: HTML/JS-based structured text
+	chat system , supports only text, minimal UI, reliable and organized, Languages: HTML,
+	JavaScript, Google Apps Script, Contact: earth.kumar.roy9752@gmail.com, Social: LinkedIn
+	https://www.linkedin.com/in/earth-kumar-roy/, Twitter https://sites.google.com/view/ekr1/leave-a-message, Notes:
+	designed for fast concise replies, low token usage, operates on Google infrastructure with slight data processing delay.
+	Respond very concisely in short replies.` }]
+       }
+    };
+
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if(!response.ok) throw new Error(`API ${response.status}`);
+      const result = await response.json();
+      const aiText = result.candidates?.[0]?.content?.parts?.[0]?.text || "I could not generate a response.";
+      appendMessage(aiText, 'model');
+      chatHistory.push({ role: "model", parts: [{ text: aiText }] });
+    } catch(err) {
+      console.error(err);
+      appendMessage("AI error, please check the console.", 'model');
+    } finally { setLoading(false); }
+  };
+
+  document.getElementById('chat-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const input = document.getElementById('user-input');
+    const text = input.value.trim();
+    if(text){ sendMessage(text); input.value=''; }
+  });
+
+  document.getElementById('backBtn').addEventListener('click', () => {
+    loadPage('Chats');
+  });
+
+
+  lucide.createIcons();
+
+  function loadPage(pageName) {
+    google.script.run.withSuccessHandler(function (html) {
+      document.open();
+      document.write(html);
+      document.close();
+    }).loadPage(pageName);
+  }
+</script>
+
+</body>
+
+</html>
